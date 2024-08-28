@@ -1,62 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <script type="text/javascript" src"https://code.jquery.com/jquery-3.7.1.min.js" > </script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js" > </script>
+
   <title>Figuras Geométricas con CSS</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .inicio {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-    .inicio button {
-      font-size: 20px;
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      animation: bounceIn 0.5s ease;
-    }
-    @keyframes bounceIn {
-      0% {
-        transform: scale(0.1);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-    .tabla {
-      display: none;
-      border-collapse: collapse;
-      margin: 0 auto;
-      border: 5px solid black;
-    }
-    .tabla td {
-      padding: 20px;
-      border: 5px solid black;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    .tabla td.selected {
-      transform: scale(1.1);
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-  </style>
+
+    
 </head>
 <body>
   <div class="inicio">
@@ -87,81 +37,83 @@
   </div>
 
   <script type="text/javascript">
-    const comenzarBtn = document.getElementById('comenzar');
-    const continuarBtn = document.getElementById('continuar');
-    const tabla = document.querySelector('.tabla');
-    const celdas = document.querySelectorAll('.tabla td');
-    let seleccionados = [];
-    let figurasSelecionadas = [];
-
-    comenzarBtn.addEventListener('click', () => {
-      comenzarBtn.classList.remove('bounceIn');
-      void comenzarBtn.offsetWidth; // Forzar la reactivación de la animación
-      comenzarBtn.style.display = 'none';
-      continuarBtn.style.display = 'inline-block';
-      tabla.style.display = 'table';
-
-      // Asignar figuras geométricas aleatorias a las celdas
-      const figuras = [
-        'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
-        'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
-        'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
-        'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
-        'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
-        'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
-      ];
-
-      const shuffledFiguras = figuras.slice(); // Crear una copia del array
-      shuffledFiguras.sort(() => Math.random() - 0.5); // Mezclar el array
-
-      celdas.forEach((celda, index) => {
-        celda.innerHTML = `<div class="${shuffledFiguras[index]}"></div>`;
-      });
-
-      celdas.forEach(celda => {
-        celda.addEventListener('click', () => {
-          if (seleccionados.length < 3) {//numero total de grid
-            if (seleccionados.includes(celda)) {
-              celda.classList.remove('selected');
-              seleccionados = seleccionados.filter(c => c !== celda);
-            } else {
-              celda.classList.add('selected');
-              seleccionados.push(celda);
-            }
-          } else {
-            if (seleccionados.includes(celda)) {
-              celda.classList.remove('selected');
-              seleccionados = seleccionados.filter(c => c !== celda);
-            } else {
-              alert('Ya has seleccionado 3 figuras.');//remover esta funcionalidad, el boton continuar debe ser el test
-            }
-          }
+    $(document).ready(function() {
+        var seleccionados = [];
+        var figurasSelecionadas = [];
+        var counter = -1;
+        var = [['']];
+        // Asignar figuras geométricas aleatorias a las celdas
+        var figuras = [
+                'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
+                'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
+                'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
+                'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
+                'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
+                'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
+            ];
+    
+        // Evento para el botón "comenzar"
+        $('#comenzar').on('click', function() {
+            $(this).removeClass('bounceIn');
+            void this.offsetWidth; // Forzar la reactivación de la animación
+            $(this).hide();
+            $('#continuar').show();
+            $('.tabla').show();  // Mostrar la tabla
+    
+            
+    
+            var shuffledFiguras = figuras.slice();
+            shuffledFiguras.sort(function() { return 0.5 - Math.random(); });
+    
+            $('.tabla td').each(function(index) {
+                $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+            });
+    
+            $('.tabla td').on('click', function() {
+                if (seleccionados.length < 3 || $(this).hasClass('selected')) {
+                    if ($(this).hasClass('selected')) {
+                        $(this).removeClass('selected');
+                        seleccionados = seleccionados.filter(c => c !== this);
+                    } else {
+                        $(this).addClass('selected');
+                        seleccionados.push(this);
+                    }
+                }
+            });
         });
-      });
-
-      var counter= -1; 
-      //$("#continuar").click(function(){counter++;});
-      continuarBtn.addEventListener('click', () => {
-        if (seleccionados.length === 3) {
-          // Guardar los nombres de las figuras seleccionadas
-          figurasSelecionadas = seleccionados.map(celda => celda.firstElementChild.className);
-          console.log(figurasSelecionadas);
-          console.log(counter);
-
-          // Reorganizar aleatoriamente las figuras de la tabla
-          shuffledFiguras.sort(() => Math.random() - 0.5);
-          celdas.forEach((celda, index) => {
-            celda.innerHTML = `<div class="${shuffledFiguras[index]}"></div>`;
-          });
-
-          // Resetear la selección de celdas
-          seleccionados.forEach(celda => celda.classList.remove('selected'));
-          seleccionados = [];
-        } else {
-          alert('Debes seleccionar 3 figuras antes de continuar.');
-        }
-      });
+    
+        // Evento para el botón "continuar"
+        $('#continuar').on('click', function() {
+            counter++;
+            console.log(counter);
+    
+            if (seleccionados.length === 3) {
+                // Guardar los nombres de las figuras seleccionadas
+                figurasSelecionadas = seleccionados.map(function(celda) {
+                    return $(celda).find('div').attr('class');
+                });
+    
+                console.log(figurasSelecionadas);
+    
+                // Reorganizar aleatoriamente las figuras de la tabla
+                var shuffledFiguras = figuras.slice();
+                shuffledFiguras.sort(function() { return 0.5 - Math.random(); });
+                $('.tabla td').each(function(index) {
+                    $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+                });
+                // Resetear la selección de celdas
+                seleccionados.forEach(function(celda) {
+                    $(celda).removeClass('selected');
+                });
+    
+                seleccionados = [];
+                setTimeout(()=>"console.log('gg')",500);
+            } else {
+                alert('Debes seleccionar 3 figuras antes de continuar.');
+            }
+        });
     });
-  </script>
+    </script>
+    
 </body>
 </html>

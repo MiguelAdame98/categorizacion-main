@@ -1,12 +1,62 @@
 
 body {
-    background: #c2bec3;
+    background: #ffffff;
     min-height: 100vh;
     display: flex;
     justify-content: space-evenly;
     align-items: center;
   }
-
+  /*body {
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }*/
+  .inicio {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .inicio button {
+    font-size: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    animation: bounceIn 0.5s ease;
+  }
+  @keyframes bounceIn {
+    0% {
+      transform: scale(0.1);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .tabla {
+    display: none;
+    border-collapse: collapse;
+    margin: 0 auto;
+    border: 5px solid black;
+  }
+  .tabla td {
+    padding: 20px;
+    border: 5px solid black;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  .tabla td.selected {
+    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.5);
+  }
   .cuadrado_rojo {
     width: 100px;
     height: 100px;
