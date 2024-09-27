@@ -1,69 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <title>Figuras Geométricas con CSS</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .inicio {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-    .inicio button {
-      font-size: 20px;
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      animation: bounceIn 0.5s ease;
-    }
-    @keyframes bounceIn {
-      0% {
-        transform: scale(0.1);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-    .tabla {
-      display: none;
-      border-collapse: collapse;
-      margin: 0 auto;
-      border: 5px solid black;
-    }
-    .tabla td {
-      padding: 20px;
-      border: 5px solid black;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    .tabla td.selected {
-      transform: scale(1.1);
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-  </style>
 </head>
 <body>
   <div class="inicio">
-    <button id="comenzar" >Comenzar</button>
+    <button id="comenzar">Comenzar</button>
   </div>
 
-  <div class="tabla-container">
+  <div class="tabla-container" style="display: none;">
     <table class="tabla">
       <tr>
         <td></td>
@@ -83,84 +30,191 @@
     </table>
     <div class="inicio">
       <button id="continuar" style="display: none;">Continuar</button>
+      <button id="startGrid" style="display: none;">Start Grid</button> <!-- New Start button -->
     </div>
   </div>
 
   <script type="text/javascript">
-    const comenzarBtn = document.getElementById('comenzar');
-    const continuarBtn = document.getElementById('continuar');
-    const tabla = document.querySelector('.tabla');
-    const celdas = document.querySelectorAll('.tabla td');
-    let seleccionados = [];
-    let figurasSelecionadas = [];
+    $(document).ready(function() {
+        var seleccionados = [];   // Stores selected elements
+        var sequence = [];        // Records each click's data
+        var experimentData = [];  // Stores overall experiment data
+        var currentGridId = 1;    // Static gridId (can be dynamic if needed)
+        var currentTryId = 1;     // Try ID, increments with each new attempt
+        var startTime;            // Tracks start time for response time calculation
+        var gridShownTime;        // Tracks when the grid is shown for total time calculation
 
-    comenzarBtn.addEventListener('click', () => {
-      comenzarBtn.classList.remove('bounceIn');
-      void comenzarBtn.offsetWidth; // Forzar la reactivación de la animación
-      comenzarBtn.style.display = 'none';
-      continuarBtn.style.display = 'inline-block';
-      tabla.style.display = 'table';
+        // List of shapes to randomize
+        var figuras = [
+          'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
+          'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
+          'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
+          'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
+          'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
+          'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
+        ];
 
-      // Asignar figuras geométricas aleatorias a las celdas
-      const figuras = [
-        'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
-        'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
-        'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
-        'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
-        'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
-        'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
-      ];
+        // Function to start a new attempt
+        function startNewAttempt() {
+            currentTryId++;     // Increment tryId for the next attempt
+            sequence = [];      // Reset sequence for new attempt
+            $('#startGrid').show(); // Show the Start Grid button for next attempt
+        }
 
-      const shuffledFiguras = figuras.slice(); // Crear una copia del array
-      shuffledFiguras.sort(() => Math.random() - 0.5); // Mezclar el array
+        // Function to convert milliseconds to seconds (with milliseconds precision)
+        function formatTime(ms) {
+            return (ms / 1000).toFixed(3) + 's';
+        }
 
-      celdas.forEach((celda, index) => {
-        celda.innerHTML = `<div class="${shuffledFiguras[index]}"></div>`;
-      });
+        // Function to convert array of objects to CSV
+        function arrayOfObjectsToCsv(data) {
+          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected','shapeSel', 'resTimeSel','totTime','correct'];
+          const csvRows = [headers.join(',')];
 
-      celdas.forEach(celda => {
-        celda.addEventListener('click', () => {
-          if (seleccionados.length < 3) {//numero total de grid
-            if (seleccionados.includes(celda)) {
-              celda.classList.remove('selected');
-              seleccionados = seleccionados.filter(c => c !== celda);
-            } else {
-              celda.classList.add('selected');
-              seleccionados.push(celda);
-            }
-          } else {
-            if (seleccionados.includes(celda)) {
-              celda.classList.remove('selected');
-              seleccionados = seleccionados.filter(c => c !== celda);
-            } else {
-              alert('Ya has seleccionado 3 figuras.');//remover esta funcionalidad, el boton continuar debe ser el test
-            }
-          }
-        });
-      });
-
-      var counter= -1; 
-      //$("#continuar").click(function(){counter++;});
-      continuarBtn.addEventListener('click', () => {
-        if (seleccionados.length === 3) {
-          // Guardar los nombres de las figuras seleccionadas
-          figurasSelecionadas = seleccionados.map(celda => celda.firstElementChild.className);
-          console.log(figurasSelecionadas);
-          console.log(counter);
-
-          // Reorganizar aleatoriamente las figuras de la tabla
-          shuffledFiguras.sort(() => Math.random() - 0.5);
-          celdas.forEach((celda, index) => {
-            celda.innerHTML = `<div class="${shuffledFiguras[index]}"></div>`;
+          data.forEach(tryData => {
+            tryData.sequence.forEach(click => {
+              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
+              csvRows.push(row.join(','));
+            });
+            tryData.seleccionados.forEach(click => {
+              const row = [tryData.gridId, tryData.tryId,click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
+              console.log(row);
+              console.log(csvRows);
+              csvRows.push(row.join(','));
+            });
           });
 
-          // Resetear la selección de celdas
-          seleccionados.forEach(celda => celda.classList.remove('selected'));
-          seleccionados = [];
-        } else {
-          alert('Debes seleccionar 3 figuras antes de continuar.');
+          return csvRows.join('\n');
         }
-      });
+
+        // Function to download CSV file
+        function downloadCsv(filename, csvData) {
+          const blob = new Blob([csvData], {type: 'text/csv'});
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.setAttribute('href', url);
+          a.setAttribute('download', filename);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+        var removeByAttr = function(arr, attr, value){
+        var i = arr.length;
+        while(i--){
+            if( arr[i] 
+              && arr[i].hasOwnProperty(attr) 
+              && (arguments.length > 2 && arr[i][attr] === value ) ){ 
+              arr.splice(i,1);
+              }
+            }
+          return arr;
+        }
+
+
+        // "Comenzar" button click event
+        $('#comenzar').on('click', function() {
+            $(this).hide();
+            $('#startGrid').show(); // Show the Start Grid button
+            $('.tabla-container').show(); // Show the container with grid
+        });
+
+        // "Start Grid" button click event
+        $('#startGrid').on('click', function() {
+            $('#startGrid').hide();
+            $('#continuar').show(); // Show the Continue button
+            $('.tabla').show(); // Make sure the table is visible
+
+            startTime = Date.now(); // Reset response timer when the grid is shown
+            gridShownTime = startTime; // Set grid shown time to calculate total time
+            var totalTime = 0;
+            // Shuffle and assign random shapes to the table
+            var shuffledFiguras = figuras.slice();
+            shuffledFiguras.sort(() => 0.5 - Math.random());
+            $('.tabla td').each(function(index) {
+                $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+            });
+
+            // Click event for each table cell
+            $('.tabla td').on('click', function() {
+                const shape = $(this).find('div').attr('class');   // Get the shape
+                var responseTime = Date.now()-startTime - totalTime ;  // Calculate response time
+                totalTime = Date.now() - gridShownTime; // Total time since grid was shown
+                
+                
+                if ($(this).hasClass('selected')) {
+                    $(this).removeClass('selected');
+                    //seleccionados = seleccionados.filter(c => c !== this);
+                    // Remove the click data from sequence
+                    console.log("this selec ", seleccionados);
+                    removeByAttr(seleccionados, 'shapeSel', shape); 
+                    //seleccionados = seleccionados.filter(click => click.shape !== shape);
+                    console.log("this selec after ", seleccionados);
+                    sequence.push({
+                            shape: shape,
+                            responseTime: formatTime(responseTime),   // Formatted response time
+                            totalTime: formatTime(totalTime),         // Formatted total time
+                            selected: "choosen"
+                        });
+                } else {
+                    if (seleccionados.length < 3) {
+                        $(this).addClass('selected');
+                        seleccionados.push({
+                            shapeSel: shape,
+                            resTimeSel: formatTime(responseTime),   // Formatted response time
+                            totTime: formatTime(totalTime),         // Formatted total time
+                            correct: true
+                        });
+                        // Add the click data to the sequence with formatted time
+                        sequence.push({
+                            shape: shape,
+                            responseTime: formatTime(responseTime),   // Formatted response time
+                            totalTime: formatTime(totalTime),         // Formatted total time
+                            selected: "rejected"
+                        });
+                    }
+                }
+                console.log(sequence); // Track data updates
+            });
+        });
+
+        // "Continuar" button click event
+        $('#continuar').on('click', function() {
+          $('#startGrid').hide();
+            if (seleccionados.length === 3) {
+                // Save current attempt's data
+                experimentData.push({
+                    gridId: currentGridId,
+                    tryId: currentTryId,
+                    sequence: [...sequence],
+                    seleccionados: [...seleccionados], // Add the current sequence
+                });
+
+                // Clear selection and start a new attempt
+                seleccionados.forEach(function(celda) {
+                    $(celda).removeClass('selected');
+                });
+                
+                seleccionados = [];
+                sequence= [];
+                console.log('Experiment Data:', experimentData); // Log data
+
+                // Reset table with new shapes
+                var shuffledFiguras = figuras.slice();
+                shuffledFiguras.sort(() => 0.5 - Math.random());
+                $('.tabla td').each(function(index) {
+                    $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+                });
+                const csvData = arrayOfObjectsToCsv(experimentData);
+                downloadCsv('experimentData.csv', csvData);
+
+                startNewAttempt();  // Reset sequence and timer for the next attempt
+
+            } else {
+                alert('Debes seleccionar 3 figuras antes de continuar.');
+            }
+        });
+
+        // Button to download experiment data as CSV (optional)
+        
     });
   </script>
 </body>

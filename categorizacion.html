@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js" > </script>
-
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <title>Figuras Geométricas con CSS</title>
   <link rel="stylesheet" href="styles.css">
-
-    
 </head>
 <body>
   <div class="inicio">
-    <button id="comenzar" >Comenzar</button>
+    <button id="comenzar">Comenzar</button>
   </div>
 
   <div class="tabla-container">
@@ -38,82 +35,130 @@
 
   <script type="text/javascript">
     $(document).ready(function() {
-        var seleccionados = [];
+        var seleccionados = [];   // Stores selected elements
+        var sequence = [];        // Records each click's data
+        var experimentData = [];  // Stores overall experiment data
         var figurasSelecionadas = [];
-        var counter = -1;
-        var data = [[' ']];
-        // Asignar figuras geométricas aleatorias a las celdas
+        var currentGridId = 1;    // Static gridId (can be dynamic if needed)
+        var currentTryId = 1;     // Try ID, increments with each new attempt
+        var startTime;            // Tracks start time for response time calculation
+
+        // List of shapes to randomize
         var figuras = [
-                'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
-                'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
-                'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
-                'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
-                'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
-                'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
-            ];
-    
-        // Evento para el botón "comenzar"
+          'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
+          'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
+          'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
+          'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
+          'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
+          'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
+        ];
+
+        // Function to start a new attempt
+        function startNewAttempt() {
+            currentTryId++;     // Increment tryId for the next attempt
+            sequence = [];      // Reset sequence for new attempt
+            startTime = Date.now();  // Start the timer
+        }
+
+        // Function to convert array of objects to CSV
+        function arrayOfObjectsToCsv(data) {
+          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'selected'];
+          const csvRows = [headers.join(',')];
+
+          data.forEach(tryData => {
+            tryData.sequence.forEach(click => {
+              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.selected];
+              csvRows.push(row.join(','));
+            });
+          });
+
+          return csvRows.join('\n');
+        }
+
+        // Function to download CSV file
+        function downloadCsv(filename, csvData){
+          const blob= new Blob([csvData], {type: 'text/csv'});
+          const url= window.URL.createObjectURL(blob);
+          const a= document.createElement('a');
+          a.setAttribute('href',url);
+          a.setAttribute('download',filename);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+
+        // "Comenzar" button click event
         $('#comenzar').on('click', function() {
-            $(this).removeClass('bounceIn');
-            void this.offsetWidth; // Forzar la reactivación de la animación
             $(this).hide();
             $('#continuar').show();
-            $('.tabla').show();  // Mostrar la tabla
-    
-            
-    
+            $('.tabla').show();  // Show the table
+            startTime = Date.now(); // Set the start time for response time tracking
+
+            // Shuffle and assign random shapes to the table
             var shuffledFiguras = figuras.slice();
-            shuffledFiguras.sort(function() { return 0.5 - Math.random(); });
-    
+            shuffledFiguras.sort(() => 0.5 - Math.random());
             $('.tabla td').each(function(index) {
                 $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
             });
-    
+
+            // Click event for each table cell
             $('.tabla td').on('click', function() {
-                if (seleccionados.length < 3 || $(this).hasClass('selected')) {
-                    if ($(this).hasClass('selected')) {
-                        $(this).removeClass('selected');
-                        seleccionados = seleccionados.filter(c => c !== this);
-                    } else {
+                const shape = $(this).find('div').attr('class');   // Get the shape
+                const responseTime = Date.now() - startTime;  // Calculate response time
+
+                if ($(this).hasClass('selected')) {
+                    $(this).removeClass('selected');
+                    seleccionados = seleccionados.filter(c => c !== this);
+                    // Remove the click data from sequence
+                    sequence = sequence.filter(click => click.shape !== shape);
+                } else {
+                    if (seleccionados.length < 3) {
                         $(this).addClass('selected');
                         seleccionados.push(this);
+                        // Add the click data to the sequence
+                        sequence.push({
+                            shape: shape,
+                            responseTime: responseTime,
+                            selected: true
+                        });
                     }
                 }
+                console.log(sequence); // Track data updates
             });
         });
-    
-        // Evento para el botón "continuar"
+
+        // "Continuar" button click event
         $('#continuar').on('click', function() {
-            counter++;
-            console.log(counter);
-    
             if (seleccionados.length === 3) {
-                // Guardar los nombres de las figuras seleccionadas
-                figurasSelecionadas = seleccionados.map(function(celda) {
-                    return $(celda).find('div').attr('class');
+                // Save current attempt's data
+                experimentData.push({
+                    gridId: currentGridId,
+                    tryId: currentTryId,
+                    sequence: [...sequence] // Add the current sequence
                 });
-    
-                console.log(figurasSelecionadas);
-    
-                // Reorganizar aleatoriamente las figuras de la tabla
-                var shuffledFiguras = figuras.slice();
-                shuffledFiguras.sort(function() { return 0.5 - Math.random(); });
-                $('.tabla td').each(function(index) {
-                    $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
-                });
-                // Resetear la selección de celdas
+
+                // Clear selection and start a new attempt
                 seleccionados.forEach(function(celda) {
                     $(celda).removeClass('selected');
                 });
-    
                 seleccionados = [];
-                setTimeout(()=>"console.log('gg')",500);
+                console.log('Experiment Data:', experimentData); // Log data
+
+                // Reset table with new shapes
+                var shuffledFiguras = figuras.slice();
+                shuffledFiguras.sort(() => 0.5 - Math.random());
+                $('.tabla td').each(function(index) {
+                    $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+                });
+                const csvData = arrayOfObjectsToCsv(experimentData);
+                downloadCsv('experimentData.csv', csvData);
+
+                startNewAttempt();  // Reset sequence and timer for the next attempt
+
             } else {
                 alert('Debes seleccionar 3 figuras antes de continuar.');
             }
         });
     });
-    </script>
-    
+  </script>
 </body>
 </html>
