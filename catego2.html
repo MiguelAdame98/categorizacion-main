@@ -68,24 +68,41 @@
 
         // Function to convert array of objects to CSV
         function arrayOfObjectsToCsv(data) {
-          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected','shapeSel', 'resTimeSel','totTime','correct'];
-          const csvRows = [headers.join(',')];
+        const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected', 'shapeSel', 'resTimeSel', 'totTime', 'correct'];
+        const csvRows = [headers.join(',')];
 
-          data.forEach(tryData => {
-            tryData.sequence.forEach(click => {
-              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
-              csvRows.push(row.join(','));
-            });
-            tryData.seleccionados.forEach(click => {
-              const row = [tryData.gridId, tryData.tryId,click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
-              console.log(row);
-              console.log(csvRows);
+        data.forEach(tryData => {
+           // Loop through the sequence (preserving temporal order)
+           tryData.sequence.forEach((click, index) => {
+      // Find the corresponding `seleccionado` by matching the `shape` in the `sequence` array with `seleccionados`
+              const seleccionado = tryData.seleccionados.find(sel => sel.shapeSel === click.shape) || {
+                shapeSel: 'undefined',
+                resTimeSel: 'undefined',
+                totTime: 'undefined',
+                correct: 'undefined'
+                };
+
+      // Create a row by combining `sequence` data with `seleccionado` data, preserving temporal structure
+              const row = [
+                tryData.gridId,
+                tryData.tryId,
+                click.shape || 'undefined',
+                click.responseTime || 'undefined',
+                click.totalTime || 'undefined',
+                click.selected || 'undefined',
+                seleccionado.shapeSel || 'undefined',
+                seleccionado.resTimeSel || 'undefined',
+                seleccionado.totTime || 'undefined',
+                seleccionado.correct || 'undefined'
+                ];
+
               csvRows.push(row.join(','));
             });
           });
 
-          return csvRows.join('\n');
-        }
+      return csvRows.join('\n');
+    }
+
 
         // Function to download CSV file
         function downloadCsv(filename, csvData) {

@@ -10,7 +10,7 @@
     <button id="comenzar">Comenzar</button>
   </div>
 
-  <div class="tabla-container">
+  <div class="tabla-container" style="display: none;">
     <table class="tabla">
       <tr>
         <td></td>
@@ -30,6 +30,7 @@
     </table>
     <div class="inicio">
       <button id="continuar" style="display: none;">Continuar</button>
+      <button id="startGrid" style="display: none;">Start Grid</button> <!-- New Start button -->
     </div>
   </div>
 
@@ -38,10 +39,10 @@
         var seleccionados = [];   // Stores selected elements
         var sequence = [];        // Records each click's data
         var experimentData = [];  // Stores overall experiment data
-        var figurasSelecionadas = [];
         var currentGridId = 1;    // Static gridId (can be dynamic if needed)
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
+        var gridShownTime;        // Tracks when the grid is shown for total time calculation
 
         // List of shapes to randomize
         var figuras = [
@@ -57,17 +58,28 @@
         function startNewAttempt() {
             currentTryId++;     // Increment tryId for the next attempt
             sequence = [];      // Reset sequence for new attempt
-            startTime = Date.now();  // Start the timer
+            $('#startGrid').show(); // Show the Start Grid button for next attempt
+        }
+
+        // Function to convert milliseconds to seconds (with milliseconds precision)
+        function formatTime(ms) {
+            return (ms / 1000).toFixed(3) + 's';
         }
 
         // Function to convert array of objects to CSV
         function arrayOfObjectsToCsv(data) {
-          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'selected'];
+          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected','shapeSel', 'resTimeSel','totTime','correct'];
           const csvRows = [headers.join(',')];
 
           data.forEach(tryData => {
             tryData.sequence.forEach(click => {
-              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.selected];
+              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
+              csvRows.push(row.join(','));
+            });
+            tryData.seleccionados.forEach(click => {
+              const row = [tryData.gridId, tryData.tryId,click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
+              console.log(row);
+              console.log(csvRows);
               csvRows.push(row.join(','));
             });
           });
@@ -76,23 +88,44 @@
         }
 
         // Function to download CSV file
-        function downloadCsv(filename, csvData){
-          const blob= new Blob([csvData], {type: 'text/csv'});
-          const url= window.URL.createObjectURL(blob);
-          const a= document.createElement('a');
-          a.setAttribute('href',url);
-          a.setAttribute('download',filename);
+        function downloadCsv(filename, csvData) {
+          const blob = new Blob([csvData], {type: 'text/csv'});
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.setAttribute('href', url);
+          a.setAttribute('download', filename);
           a.click();
           window.URL.revokeObjectURL(url);
         }
+        var removeByAttr = function(arr, attr, value){
+        var i = arr.length;
+        while(i--){
+            if( arr[i] 
+              && arr[i].hasOwnProperty(attr) 
+              && (arguments.length > 2 && arr[i][attr] === value ) ){ 
+              arr.splice(i,1);
+              }
+            }
+          return arr;
+        }
+
 
         // "Comenzar" button click event
         $('#comenzar').on('click', function() {
             $(this).hide();
-            $('#continuar').show();
-            $('.tabla').show();  // Show the table
-            startTime = Date.now(); // Set the start time for response time tracking
+            $('#startGrid').show(); // Show the Start Grid button
+            $('.tabla-container').show(); // Show the container with grid
+        });
 
+        // "Start Grid" button click event
+        $('#startGrid').on('click', function() {
+            $('#startGrid').hide();
+            $('#continuar').show(); // Show the Continue button
+            $('.tabla').show(); // Make sure the table is visible
+
+            startTime = Date.now(); // Reset response timer when the grid is shown
+            gridShownTime = startTime; // Set grid shown time to calculate total time
+            var totalTime = 0;
             // Shuffle and assign random shapes to the table
             var shuffledFiguras = figuras.slice();
             shuffledFiguras.sort(() => 0.5 - Math.random());
@@ -103,22 +136,39 @@
             // Click event for each table cell
             $('.tabla td').on('click', function() {
                 const shape = $(this).find('div').attr('class');   // Get the shape
-                const responseTime = Date.now() - startTime;  // Calculate response time
-
+                var responseTime = Date.now()-startTime - totalTime ;  // Calculate response time
+                totalTime = Date.now() - gridShownTime; // Total time since grid was shown
+                
+                
                 if ($(this).hasClass('selected')) {
                     $(this).removeClass('selected');
-                    seleccionados = seleccionados.filter(c => c !== this);
+                    //seleccionados = seleccionados.filter(c => c !== this);
                     // Remove the click data from sequence
-                    sequence = sequence.filter(click => click.shape !== shape);
+                    console.log("this selec ", seleccionados);
+                    removeByAttr(seleccionados, 'shapeSel', shape); 
+                    //seleccionados = seleccionados.filter(click => click.shape !== shape);
+                    console.log("this selec after ", seleccionados);
+                    sequence.push({
+                            shape: shape,
+                            responseTime: formatTime(responseTime),   // Formatted response time
+                            totalTime: formatTime(totalTime),         // Formatted total time
+                            selected: "choosen"
+                        });
                 } else {
                     if (seleccionados.length < 3) {
                         $(this).addClass('selected');
-                        seleccionados.push(this);
-                        // Add the click data to the sequence
+                        seleccionados.push({
+                            shapeSel: shape,
+                            resTimeSel: formatTime(responseTime),   // Formatted response time
+                            totTime: formatTime(totalTime),         // Formatted total time
+                            correct: true
+                        });
+                        // Add the click data to the sequence with formatted time
                         sequence.push({
                             shape: shape,
-                            responseTime: responseTime,
-                            selected: true
+                            responseTime: formatTime(responseTime),   // Formatted response time
+                            totalTime: formatTime(totalTime),         // Formatted total time
+                            selected: "rejected"
                         });
                     }
                 }
@@ -128,19 +178,23 @@
 
         // "Continuar" button click event
         $('#continuar').on('click', function() {
+          $('#startGrid').hide();
             if (seleccionados.length === 3) {
                 // Save current attempt's data
                 experimentData.push({
                     gridId: currentGridId,
                     tryId: currentTryId,
-                    sequence: [...sequence] // Add the current sequence
+                    sequence: [...sequence],
+                    seleccionados: [...seleccionados], // Add the current sequence
                 });
 
                 // Clear selection and start a new attempt
                 seleccionados.forEach(function(celda) {
                     $(celda).removeClass('selected');
                 });
+                
                 seleccionados = [];
+                sequence= [];
                 console.log('Experiment Data:', experimentData); // Log data
 
                 // Reset table with new shapes
@@ -158,6 +212,9 @@
                 alert('Debes seleccionar 3 figuras antes de continuar.');
             }
         });
+
+        // Button to download experiment data as CSV (optional)
+        
     });
   </script>
 </body>
