@@ -43,8 +43,16 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
-
-        // List of shapes to randomize
+        //COSAS QUE TODAVIA NECESITAMOS CAMBIAR, TIEMPOS ENTRE TRY, CADA TRY DEBE REINICIAR EL TIEMPO TOTAL
+        // LO DEL GRID QUE APAREZCA Y DESAPAREZCA Y QUE REINICIE EL TIMER
+        // TIEMPO DE PRESIONAR EL BOTON DE CONTINUAR, TIENE QUE SALIR EL TIEMPO CUANDO FUE PRESIONADO EN EL ARRAY
+        //REGLAS
+        //ARREGLAR EL GRID PARA LAS REGLAS
+        //AGREGAR FUNCIONALIDAD DE LAS REGLAS
+        //DEMOGRAFICOS
+        //PARTE FINAL DEL EXPERIMENTO, ARREGLAR
+        
+        var mia = []
         var figuras = [
           'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
           'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
@@ -56,9 +64,10 @@
 
         // Function to start a new attempt
         function startNewAttempt() {
-            currentTryId++;     // Increment tryId for the next attempt
+            currentTryId++;
+            currentGridId++;     // Increment tryId for the next attempt
             sequence = [];      // Reset sequence for new attempt
-            $('#startGrid').show(); // Show the Start Grid button for next attempt
+
         }
 
         // Function to convert milliseconds to seconds (with milliseconds precision)
@@ -66,26 +75,60 @@
             return (ms / 1000).toFixed(3) + 's';
         }
 
-        // Function to convert array of objects to CSV
         function arrayOfObjectsToCsv(data) {
-          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected','shapeSel', 'resTimeSel','totTime','correct'];
+          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected', 'shapeSel', 'resTimeSel', 'totTime', 'correct'];
           const csvRows = [headers.join(',')];
 
           data.forEach(tryData => {
-            tryData.sequence.forEach(click => {
-              const row = [tryData.gridId, tryData.tryId, click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
-              csvRows.push(row.join(','));
-            });
-            tryData.seleccionados.forEach(click => {
-              const row = [tryData.gridId, tryData.tryId,click.shape, click.responseTime, click.totalTime, click.selected, click.shapeSel, click.resTimeSel, click.totTime, click.correct ];
-              console.log(row);
-              console.log(csvRows);
-              csvRows.push(row.join(','));
-            });
-          });
+    // Create a mapping of shapes to their last index in the sequence
+            const lastOccurrenceMap = {};
 
-          return csvRows.join('\n');
-        }
+    // Iterate over sequence to track the last occurrence index for each shape
+            tryData.sequence.forEach((click, index) => {
+              const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
+              lastOccurrenceMap[key] = index;
+            });
+
+    // Loop through the sequence (preserving temporal order)
+            tryData.sequence.forEach((click, index) => {
+              let seleccionado = {
+                shapeSel: 'undefined',
+                resTimeSel: 'undefined',
+                totTime: 'undefined',
+                correct: 'undefined'
+              };
+
+      // Only apply `seleccionados` data to the last occurrence of a shape
+              const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
+              const isLastOccurrence = lastOccurrenceMap[key] === index;
+
+              if (isLastOccurrence) {
+        // Find the corresponding `seleccionado` for this shape
+                seleccionado = tryData.seleccionados.find(sel => sel.shapeSel === click.shape) || seleccionado;
+              }
+
+      // Create a row by combining `sequence` data with `seleccionado` data, preserving temporal structure
+              const row = [
+                tryData.gridId || 'undefined',
+                tryData.tryId || 'undefined',
+                click.shape || 'undefined',
+                click.responseTime || 'undefined',
+                click.totalTime || 'undefined',
+                click.selected || 'undefined' ,
+                seleccionado.shapeSel || 'undefined',
+                seleccionado.resTimeSel || 'undefined',
+                seleccionado.totTime || 'undefined',
+                seleccionado.correct || 'undefined'
+              ];
+
+              csvRows.push(row.join(','));
+             });
+         });
+
+        return csvRows.join('\n');
+      }
+
+
 
         // Function to download CSV file
         function downloadCsv(filename, csvData) {
@@ -126,9 +169,11 @@
             startTime = Date.now(); // Reset response timer when the grid is shown
             gridShownTime = startTime; // Set grid shown time to calculate total time
             var totalTime = 0;
+            var responseTime =0
             // Shuffle and assign random shapes to the table
             var shuffledFiguras = figuras.slice();
             shuffledFiguras.sort(() => 0.5 - Math.random());
+            $('.tabla td').off('click'); 
             $('.tabla td').each(function(index) {
                 $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
             });
@@ -152,13 +197,14 @@
                             shape: shape,
                             responseTime: formatTime(responseTime),   // Formatted response time
                             totalTime: formatTime(totalTime),         // Formatted total time
-                            selected: "choosen"
+                            selected: "rejected"
                         });
                 } else {
                     if (seleccionados.length < 3) {
                         $(this).addClass('selected');
                         seleccionados.push({
-                            shapeSel: shape,
+                            shapeProp: this,
+                            shapeSel:shape,
                             resTimeSel: formatTime(responseTime),   // Formatted response time
                             totTime: formatTime(totalTime),         // Formatted total time
                             correct: true
@@ -168,7 +214,7 @@
                             shape: shape,
                             responseTime: formatTime(responseTime),   // Formatted response time
                             totalTime: formatTime(totalTime),         // Formatted total time
-                            selected: "rejected"
+                            selected: "selected"
                         });
                     }
                 }
@@ -178,7 +224,6 @@
 
         // "Continuar" button click event
         $('#continuar').on('click', function() {
-          $('#startGrid').hide();
             if (seleccionados.length === 3) {
                 // Save current attempt's data
                 experimentData.push({
@@ -187,12 +232,12 @@
                     sequence: [...sequence],
                     seleccionados: [...seleccionados], // Add the current sequence
                 });
-
+                selec=seleccionados.map(shape => shape.shapeProp);
                 // Clear selection and start a new attempt
-                seleccionados.forEach(function(celda) {
-                    $(celda).removeClass('selected');
+                selec.forEach(function(celda) {
+                  $(celda).removeClass('selected');
                 });
-                
+                selec=[]
                 seleccionados = [];
                 sequence= [];
                 console.log('Experiment Data:', experimentData); // Log data
@@ -203,10 +248,17 @@
                 $('.tabla td').each(function(index) {
                     $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
                 });
-                const csvData = arrayOfObjectsToCsv(experimentData);
-                downloadCsv('experimentData.csv', csvData);
+                if (currentGridId>=3){
 
+                  const csvData = arrayOfObjectsToCsv(experimentData);
+                  downloadCsv('experimentData.csv', csvData);
+                }
+
+                
                 startNewAttempt();  // Reset sequence and timer for the next attempt
+                $('.tabla').hide();
+                $('#startGrid').show();
+                $('#continuar').hide();
 
             } else {
                 alert('Debes seleccionar 3 figuras antes de continuar.');

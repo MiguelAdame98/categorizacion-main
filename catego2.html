@@ -16,13 +16,22 @@
         <td></td>
         <td></td>
         <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
       </tr>
       <tr>
         <td></td>
         <td></td>
         <td></td>
+        <td></td>
       </tr>
       <tr>
+        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -43,7 +52,6 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
-        //COSAS QUE TODAVIA NECESITAMOS CAMBIAR, TIEMPOS ENTRE TRY, CADA TRY DEBE REINICIAR EL TIEMPO TOTAL
         // LO DEL GRID QUE APAREZCA Y DESAPAREZCA Y QUE REINICIE EL TIMER
         // TIEMPO DE PRESIONAR EL BOTON DE CONTINUAR, TIENE QUE SALIR EL TIEMPO CUANDO FUE PRESIONADO EN EL ARRAY
         //REGLAS
@@ -51,25 +59,57 @@
         //AGREGAR FUNCIONALIDAD DE LAS REGLAS
         //DEMOGRAFICOS
         //PARTE FINAL DEL EXPERIMENTO, ARREGLAR
-        // List of shapes to randomize
-        //asdasdasdasd   
+        
         var mia = []
-        var figuras = [
-          'cuadrado_rojo', 'cuadrado_azul', 'cuadrado_amarillo',
-          'cuadrado_rojo_borde', 'cuadrado_azul_borde', 'cuadrado_amarillo_borde',
-          'circulo_rojo', 'circulo_azul', 'circulo_amarillo',
-          'circulo_rojo_borde', 'circulo_azul_borde', 'circulo_amarillo_borde',
-          'triangulo_rojo', 'triangulo_azul', 'triangulo_amarillo',
-          'triangulo_rojo_borde', 'triangulo_azul_borde', 'triangulo_amarillo_borde'
-        ];
+        const figuras = [
+          { name: 'cuadrado_azul', rules: { shape: 'cuadrado', color: 'azul', border: false }},
+          { name: 'cuadrado_rojo', rules: { shape: 'cuadrado', color: 'rojo', border: false }},
+          { name: 'cuadrado_amarillo', rules: { shape: 'cuadrado', color: 'amarillo', border: false }},
+          { name: 'circulo_azul', rules: { shape: 'circulo', color: 'azul', border: false }},
+          { name: 'circulo_rojo', rules: { shape: 'circulo', color: 'rojo', border: false }},
+          { name: 'circulo_amarillo', rules: { shape: 'circulo', color: 'amarillo', border: false }},
+          { name: 'triangulo_azul', rules: { shape: 'triangulo', color: 'azul', border: false }},
+          { name: 'triangulo_rojo', rules: { shape: 'triangulo', color: 'rojo', border: false }},
+          { name: 'triangulo_amarillo', rules: { shape: 'triangulo', color: 'amarillo', border: false }},
+          { name: 'cuadrado_azul_borde', rules: { shape: 'cuadrado', color: 'azul', border: true }},
+          { name: 'cuadrado_rojo_borde', rules: { shape: 'cuadrado', color: 'rojo', border: true }},
+          { name: 'cuadrado_amarillo_borde', rules: { shape: 'cuadrado', color: 'amarillo', border: true }},
+          { name: 'circulo_azul_borde', rules: { shape: 'circulo', color: 'azul', border: true }},
+          { name: 'circulo_rojo_borde', rules: { shape: 'circulo', color: 'rojo', border: true }},
+          { name: 'circulo_amarillo_borde', rules: { shape: 'circulo', color: 'amarillo', border: true }},
+          { name: 'triangulo_azul_borde', rules: { shape: 'triangulo', color: 'azul', border: true }},
+          { name: 'triangulo_rojo_borde', rules: { shape: 'triangulo', color: 'rojo', border: true }},
+          { name: 'triangulo_amarillo_borde', rules: { shape: 'triangulo', color: 'amarillo', border: true }},];
+        
 
         // Function to start a new attempt
         function startNewAttempt() {
-            currentTryId++;
+            currentTryId=1;
             currentGridId++;     // Increment tryId for the next attempt
             sequence = [];      // Reset sequence for new attempt
-            $('#startGrid').show(); // Show the Start Grid button for next attempt
+
         }
+        function checkSharedRules(selectedShapes,figuras) {
+          const filterShapes = selectedShapes.map(s => {
+          const shapeClass = $(s.shapeProp).find('div').attr('class');
+          console.log('Shape Class:', shapeClass);  // This should show the correct class like 'cuadrado_azul'
+
+          // Find the corresponding entry in the 'figuras' array using the class name directly
+          return figuras.find(f => f.name === shapeClass);
+          });
+          console.log(filterShapes[0]);
+          const firstShape = filterShapes[0];
+          const firstShapeRules = firstShape.rules;
+
+          // Check if all shapes share the same 'shape', 'color', or 'border'
+          const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
+          console.log(sameShape);
+          const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
+          console.log(sameColor);
+          const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
+          console.log(sameBorder);
+          return sameShape || sameColor || sameBorder;}
+
 
         // Function to convert milliseconds to seconds (with milliseconds precision)
         function formatTime(ms) {
@@ -81,16 +121,16 @@
           const csvRows = [headers.join(',')];
 
           data.forEach(tryData => {
-    // Create a mapping of shapes to their last index in the sequence
+            // Create a mapping of shapes to their last index in the sequence
             const lastOccurrenceMap = {};
 
-    // Iterate over sequence to track the last occurrence index for each shape
+            // Iterate over sequence to track the last occurrence index for each shape
             tryData.sequence.forEach((click, index) => {
               const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
               lastOccurrenceMap[key] = index;
             });
 
-    // Loop through the sequence (preserving temporal order)
+            // Loop through the sequence (preserving temporal order)
             tryData.sequence.forEach((click, index) => {
               let seleccionado = {
                 shapeSel: 'undefined',
@@ -99,16 +139,16 @@
                 correct: 'undefined'
               };
 
-      // Only apply `seleccionados` data to the last occurrence of a shape
+             // Only apply `seleccionados` data to the last occurrence of a shape
               const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
               const isLastOccurrence = lastOccurrenceMap[key] === index;
 
               if (isLastOccurrence) {
-        // Find the corresponding `seleccionado` for this shape
+              // Find the corresponding `seleccionado` for this shape
                 seleccionado = tryData.seleccionados.find(sel => sel.shapeSel === click.shape) || seleccionado;
               }
 
-      // Create a row by combining `sequence` data with `seleccionado` data, preserving temporal structure
+              // Create a row by combining `sequence` data with `seleccionado` data, preserving temporal structure
               const row = [
                 tryData.gridId || 'undefined',
                 tryData.tryId || 'undefined',
@@ -170,9 +210,13 @@
             startTime = Date.now(); // Reset response timer when the grid is shown
             gridShownTime = startTime; // Set grid shown time to calculate total time
             var totalTime = 0;
+            var responseTime =0
             // Shuffle and assign random shapes to the table
-            var shuffledFiguras = figuras.slice();
+            //MAYBE A MAP?
+            figName=figuras.map(figura => figura.name);
+            var shuffledFiguras = figName.slice();
             shuffledFiguras.sort(() => 0.5 - Math.random());
+            $('.tabla td').off('click'); 
             $('.tabla td').each(function(index) {
                 $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
             });
@@ -188,7 +232,6 @@
                     $(this).removeClass('selected');
                     //seleccionados = seleccionados.filter(c => c !== this);
                     // Remove the click data from sequence
-                    console.log("this selec ", seleccionados);
                     removeByAttr(seleccionados, 'shapeSel', shape); 
                     //seleccionados = seleccionados.filter(click => click.shape !== shape);
                     console.log("this selec after ", seleccionados);
@@ -202,7 +245,8 @@
                     if (seleccionados.length < 3) {
                         $(this).addClass('selected');
                         seleccionados.push({
-                            shapeSel: shape,
+                            shapeProp: this,
+                            shapeSel:shape,
                             resTimeSel: formatTime(responseTime),   // Formatted response time
                             totTime: formatTime(totalTime),         // Formatted total time
                             correct: true
@@ -222,21 +266,21 @@
 
         // "Continuar" button click event
         $('#continuar').on('click', function() {
-          $('#startGrid').hide();
-            if (seleccionados.length === 3) {
+            if (checkSharedRules(seleccionados, figuras)) {
                 // Save current attempt's data
+                console.log(seleccionados);
                 experimentData.push({
                     gridId: currentGridId,
                     tryId: currentTryId,
                     sequence: [...sequence],
                     seleccionados: [...seleccionados], // Add the current sequence
                 });
-
+                selec=seleccionados.map(shape => shape.shapeProp);
                 // Clear selection and start a new attempt
-                seleccionados.forEach(function(celda) {
-                    $(celda).removeClass('selected');
+                selec.forEach(function(celda) {
+                  $(celda).removeClass('selected');
                 });
-                
+                selec=[]
                 seleccionados = [];
                 sequence= [];
                 console.log('Experiment Data:', experimentData); // Log data
@@ -248,15 +292,35 @@
                     $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
                 });
                 if (currentGridId>=3){
+
                   const csvData = arrayOfObjectsToCsv(experimentData);
                   downloadCsv('experimentData.csv', csvData);
                 }
 
-        
+                
                 startNewAttempt();  // Reset sequence and timer for the next attempt
+                $('.tabla').hide();
+                $('#startGrid').show();
+                $('#continuar').hide();
 
             } else {
-                alert('Debes seleccionar 3 figuras antes de continuar.');
+              console.log(seleccionados);
+              experimentData.push({
+                    gridId: currentGridId,
+                    tryId: currentTryId,
+                    sequence: [...sequence],
+                    seleccionados: [...seleccionados], // Add the current sequence
+                });
+              selec=seleccionados.map(shape => shape.shapeProp);
+                // Clear selection and start a new attempt
+              selec.forEach(function(celda) {
+                $(celda).removeClass('selected');
+                });
+              console.log('Experiment Data:', experimentData); // Log data
+              selec=[]
+              seleccionados = [];
+              sequence= [];
+              currentTryId++;
             }
         });
 
