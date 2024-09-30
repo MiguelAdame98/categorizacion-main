@@ -9,6 +9,40 @@
   <div class="inicio">
     <button id="comenzar">Comenzar</button>
   </div>
+  <div id="Demographics" style="text-align:center">
+    <p>As a part of the research we are collecting general demographic information. </p>
+    <p>You are not required to complete these questions. </p>
+    <p>However, doing so will help us better understand our results.</p>
+    <p>1. Country
+    <input id="Country" type="text"> </p>
+    <p>2.
+    <input id="Sex" type="radio" name="SexGroup" value="Male"> Male
+    <input id="Sex" type="radio" name="SexGroup" value="Female"> Female</p>
+    <p>3.  Age Range</p>
+    <input id="Age" type="radio" name="AgeGroup" value="20"> < 20
+    <input id="Age" type="radio" name="AgeGroup" value="25"> 20 - 25
+    <input id="Age" type="radio" name="AgeGroup" value="30"> 26 - 30
+    <input id="Age" type="radio" name="AgeGroup" value="35"> 31 - 35
+    <input id="Age" type="radio" name="AgeGroup" value="40"> 36 - 40<br>
+    <input id="Age" type="radio" name="AgeGroup" value="45"> 41 - 45
+    <input id="Age" type="radio" name="AgeGroup" value="50"> 46 - 50
+    <input id="Age" type="radio" name="AgeGroup" value="55"> 51 - 55
+    <input id="Age" type="radio" name="AgeGroup" value="60"> 56 - 60
+    <input id="Age" type="radio" name="AgeGroup" value="65"> 61 - 65
+    <input id="Age" type="radio" name="AgeGroup" value="70"> 66 and above<br>
+    <p>4. Handedness</p>
+    <input id="Hand" type="radio" name="HandGroup" value="Right"> Right
+    <input id="Hand" type="radio" name="HandGroup" value="Left"> Left
+    <input id="Hand" type="radio" name="HandGroup" value="Both"> Both
+    <p>5. Vision</p>
+    <input id="Vision" type="radio" name="VisionGroup" value="Normal"> Normal eyesight without needing glasses<br>
+    <input id="Vision" type="radio" name="VisionGroup" value="Corrected"> Corrected Vision (wear glasses)<br>
+    <input id="Vision" type="radio" name="VisionGroup" value="problems"> Poor eyesight and do not wear glasses<br>
+    <p>6. English Ability</p>
+    <input id="English" type="radio" name="EnglishGroup" value="First"> First-language speaker<br>
+    <input id="English" type="radio" name="EnglishGroup" value="Second"> Second-language speaker<br>
+    <input id="English" type="radio" name="EnglishGroup" value="None"> No English ability<br>
+    </div>
 
   <div class="tabla-container" style="display: none;">
     <table class="tabla">
@@ -52,10 +86,7 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
-        // LO DEL GRID QUE APAREZCA Y DESAPAREZCA Y QUE REINICIE EL TIMER
-        // TIEMPO DE PRESIONAR EL BOTON DE CONTINUAR, TIENE QUE SALIR EL TIEMPO CUANDO FUE PRESIONADO EN EL ARRAY
-        //REGLAS
-        //ARREGLAR EL GRID PARA LAS REGLAS
+        $("#Demographics").show();
         //AGREGAR FUNCIONALIDAD DE LAS REGLAS
         //DEMOGRAFICOS
         //PARTE FINAL DEL EXPERIMENTO, ARREGLAR
@@ -197,8 +228,14 @@
         // "Comenzar" button click event
         $('#comenzar').on('click', function() {
             $(this).hide();
+            deminfo = $("#Country").val() + "," + $("#Sex:checked").val() + "," +
+  			    $("#Age:checked").val() + "," + $("#Hand:checked").val() + "," +
+  			    $("#Vision:checked").val() + "," + $("#English:checked").val();
+            console.log(deminfo);
+            $("#Demographics").hide();
             $('#startGrid').show(); // Show the Start Grid button
             $('.tabla-container').show(); // Show the container with grid
+            $("#Demographics").hide();
         });
 
         // "Start Grid" button click event
@@ -241,24 +278,22 @@
                             totalTime: formatTime(totalTime),         // Formatted total time
                             selected: "rejected"
                         });
-                } else {
-                    if (seleccionados.length < 3) {
-                        $(this).addClass('selected');
-                        seleccionados.push({
-                            shapeProp: this,
-                            shapeSel:shape,
-                            resTimeSel: formatTime(responseTime),   // Formatted response time
-                            totTime: formatTime(totalTime),         // Formatted total time
-                            correct: true
-                        });
-                        // Add the click data to the sequence with formatted time
-                        sequence.push({
-                            shape: shape,
-                            responseTime: formatTime(responseTime),   // Formatted response time
-                            totalTime: formatTime(totalTime),         // Formatted total time
-                            selected: "selected"
-                        });
-                    }
+                } else { 
+                  $(this).addClass('selected');
+                  seleccionados.push({
+                  shapeProp: this,
+                  shapeSel:shape,
+                  resTimeSel: formatTime(responseTime),   // Formatted response time
+                  totTime: formatTime(totalTime),         // Formatted total time
+                  correct: true                      });
+                  // Add the click data to the sequence with formatted time
+                  sequence.push({
+                    shape: shape,
+                    responseTime: formatTime(responseTime),   // Formatted response time
+                    totalTime: formatTime(totalTime),         // Formatted total time
+                    selected: "selected"
+                      });
+                  
                 }
                 console.log(sequence); // Track data updates
             });
@@ -270,7 +305,7 @@
                 // Save current attempt's data
                 seleccionados.forEach((item, index) => {
                   // Update the 'correct' key to whatever value you want (e.g., true or false)
-                  item.correct = "TUREE"; // Example: setting 'correct' to false for all items
+                  item.correct = "True"; 
                 });
                 console.log(seleccionados);
                 experimentData.push({
@@ -310,7 +345,7 @@
             } else {
               seleccionados.forEach((item, index) => {
                   // Update the 'correct' key to whatever value you want (e.g., true or false)
-                  item.correct = "falseee"; // Example: setting 'correct' to false for all items
+                  item.correct = "False"; // Example: setting 'correct' to false for all items
                 });
               console.log(seleccionados);
               experimentData.push({
