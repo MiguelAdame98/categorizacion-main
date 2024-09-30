@@ -268,6 +268,10 @@
         $('#continuar').on('click', function() {
             if (checkSharedRules(seleccionados, figuras)) {
                 // Save current attempt's data
+                seleccionados.forEach((item, index) => {
+                  // Update the 'correct' key to whatever value you want (e.g., true or false)
+                  item.correct = "TUREE"; // Example: setting 'correct' to false for all items
+                });
                 console.log(seleccionados);
                 experimentData.push({
                     gridId: currentGridId,
@@ -304,6 +308,10 @@
                 $('#continuar').hide();
 
             } else {
+              seleccionados.forEach((item, index) => {
+                  // Update the 'correct' key to whatever value you want (e.g., true or false)
+                  item.correct = "falseee"; // Example: setting 'correct' to false for all items
+                });
               console.log(seleccionados);
               experimentData.push({
                     gridId: currentGridId,
