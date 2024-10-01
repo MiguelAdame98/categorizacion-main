@@ -79,6 +79,8 @@
 
   <script type="text/javascript">
     $(document).ready(function() {
+        $('#Demographics').find('input[type=text], select').val('');
+    	  $('#Demographics').find('input[type=radio], input[type=checkbox]').prop('checked', false);
         var seleccionados = [];   // Stores selected elements
         var sequence = [];        // Records each click's data
         var experimentData = [];  // Stores overall experiment data
