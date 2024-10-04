@@ -6,6 +6,10 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <p id="secondInst">Please read the consent form below that explains your rights as a human participant in research</p>
+  <tr><td height="100%">
+  <iframe id="ConsentFrame" width="100%" height="50%" src="TURKconsent.htm"></iframe>
+  </td></tr>
   <div class="inicio">
     <button id="comenzar">Comenzar</button>
   </div>
@@ -15,6 +19,8 @@
     <p>However, doing so will help us better understand our results.</p>
     <p>1. Country
     <input id="Country" type="text"> </p>
+    <p>Preguntonaaa
+    <input id="preguntaaa" type="text"></p>
     <p>2.
     <input id="Sex" type="radio" name="SexGroup" value="Male"> Male
     <input id="Sex" type="radio" name="SexGroup" value="Female"> Female</p>
@@ -71,11 +77,16 @@
         <td></td>
       </tr>
     </table>
+    <table id="selectedShapesTable" style="border-collapse: collapse; margin-bottom: 20px;">
+      <!-- Empty table to be populated dynamically -->
+    </table>
+  
     <div class="inicio">
       <button id="continuar" style="display: none;">Continuar</button>
       <button id="startGrid" style="display: none;">Start Grid</button> <!-- New Start button -->
     </div>
   </div>
+
 
   <script type="text/javascript">
     $(document).ready(function() {
@@ -88,6 +99,8 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
+        $("#secondInst").hide();
+        $("#ConsentFrame").hide();
         $("#Demographics").show();
         //AGREGAR FUNCIONALIDAD DE LAS REGLAS
         //DEMOGRAFICOS
@@ -122,6 +135,22 @@
             sequence = [];      // Reset sequence for new attempt
 
         }
+        function timeoutFeedback(feedback, callback) {
+          const originalColor = $('body').css('background-color');
+          var backgroundColor= 'red'
+          if (feedback === true){
+            backgroundColor= 'green';
+          } 
+          $('body').css('background-color', backgroundColor);
+          setTimeout(function() {
+          // Revert the background color to the original
+          $('body').css('background-color', originalColor);
+          // Enable the button and grid after the feedback
+          $('#continuar').prop('disabled', false);
+          $('.grid').css('pointer-events', 'auto');
+          callback();
+          }, 3000);  // Feedback duration (3 seconds)
+      }
         function checkSharedRules(selectedShapes,figuras) {
           const filterShapes = selectedShapes.map(s => {
           const shapeClass = $(s.shapeProp).find('div').attr('class');
@@ -136,13 +165,27 @@
 
           // Check if all shapes share the same 'shape', 'color', or 'border'
           const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
-          console.log(sameShape);
           const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
-          console.log(sameColor);
           const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
-          console.log(sameBorder);
-          return sameShape || sameColor || sameBorder;}
+          return sameShape || sameColor;}
 
+          function updateSelectedShapesTable() {
+            const selectedTable = $('#selectedShapesTable');
+            selectedTable.empty();  // Clear the table before updating
+
+            if (seleccionados.length > 0) {
+              const shapeRow = $('<tr></tr>');  // Create a single row
+
+              seleccionados.forEach(function(item) {
+                const shapeClass = $(item.shapeProp).find('div').attr('class');
+      
+                // Add each shape as a new column (td) in the same row
+                const shapeCell = $('<td></td>').html('<div class="' + shapeClass + ' shape-large"></div>');
+                shapeRow.append(shapeCell);});
+              selectedTable.append(shapeRow);  // Append the single row with all selected shapes as columns
+              }
+  
+            }
 
         // Function to convert milliseconds to seconds (with milliseconds precision)
         function formatTime(ms) {
@@ -230,7 +273,7 @@
         // "Comenzar" button click event
         $('#comenzar').on('click', function() {
             $(this).hide();
-            deminfo = $("#Country").val() + "," + $("#Sex:checked").val() + "," +
+            deminfo = $("#Country").val() + ","+ $("#preguntaaa").val()+ ","+ $("#Sex:checked").val() + "," +
   			    $("#Age:checked").val() + "," + $("#Hand:checked").val() + "," +
   			    $("#Vision:checked").val() + "," + $("#English:checked").val();
             console.log(deminfo);
@@ -297,13 +340,17 @@
                       });
                   
                 }
+                updateSelectedShapesTable();
                 console.log(sequence); // Track data updates
             });
         });
 
         // "Continuar" button click event
         $('#continuar').on('click', function() {
+          $('#continuar').prop('disabled', true);
+          $('.grid').css('pointer-events', 'none');
             if (checkSharedRules(seleccionados, figuras)) {
+              timeoutFeedback(true, function(){ 
                 // Save current attempt's data
                 seleccionados.forEach((item, index) => {
                   // Update the 'correct' key to whatever value you want (e.g., true or false)
@@ -343,8 +390,10 @@
                 $('.tabla').hide();
                 $('#startGrid').show();
                 $('#continuar').hide();
-
+                updateSelectedShapesTable();
+              });
             } else {
+              timeoutFeedback(function(){
               seleccionados.forEach((item, index) => {
                   // Update the 'correct' key to whatever value you want (e.g., true or false)
                   item.correct = "False"; // Example: setting 'correct' to false for all items
@@ -366,6 +415,8 @@
               seleccionados = [];
               sequence= [];
               currentTryId++;
+              updateSelectedShapesTable();
+              });
             }
         });
 

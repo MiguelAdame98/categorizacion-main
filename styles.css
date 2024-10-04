@@ -57,6 +57,17 @@ body {
     transform: scale(1.1);
     background-color: rgba(255, 255, 255, 0.5);
   }
+  #selectedShapesTable td {
+    border: 1px solid white; /* White borders make it "invisible" */
+    padding: 10px;
+    text-align: center;
+  }
+
+  #selectedShapesTable td img {
+      width: 50px; /* Adjust size as needed */
+      height: 50px;
+  }
+
   .cuadrado_rojo {
     width: 100px;
     height: 100px;
@@ -271,6 +282,12 @@ body {
                       0% 35%, 
                       32% 30%);
   }
+  .shape-large {
+    width: 150px;
+    height: 150px;
+}
+
+
   
   .estrella::before {
     content: "";

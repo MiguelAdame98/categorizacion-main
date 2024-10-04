@@ -165,6 +165,111 @@
             $('#startGrid').hide();
             $('#continuar').show(); // Show the Continue button
             $('.tabla').show(); // Make sure the table is visible
+            function timeoutFeedback(feedback, callback) {
+    const originalColor = $('body').css('background-color');
+    var backgroundColor = 'red';
+    
+    if (feedback === true) {
+        backgroundColor = 'green';
+    } 
+
+    // Set background color to indicate feedback
+    $('body').css('background-color', backgroundColor);
+
+    // Hold the feedback color for 3 seconds
+    setTimeout(function() {
+        // Revert the background color to the original
+        $('body').css('background-color', originalColor);
+
+        // Enable the button and grid after the feedback
+        $('#continuar').prop('disabled', false);
+        $('.grid').css('pointer-events', 'auto');
+
+        // Call the callback function to proceed with the rest of the code
+        if (typeof callback === 'function') {
+            callback();  // Execute the code passed as callback
+        }
+    }, 3000);  // Feedback duration (3 seconds)
+}
+
+// "continuar" button click event
+$('#continuar').on('click', function() {
+    $('#continuar').prop('disabled', true);
+    $('.grid').css('pointer-events', 'none');
+    
+    // Check if the selection is correct
+    if (checkSharedRules(seleccionados, figuras)) {
+        // Show correct feedback (green) and then proceed
+        timeoutFeedback(true, function() {
+            // Save current attempt's data
+            seleccionados.forEach((item, index) => {
+                item.correct = "True";
+            });
+            experimentData.push({
+                gridId: currentGridId,
+                tryId: currentTryId,
+                sequence: [...sequence],
+                seleccionados: [...seleccionados],
+            });
+            
+            // Clear selection and start a new attempt
+            selec = seleccionados.map(shape => shape.shapeProp);
+            selec.forEach(function(celda) {
+                $(celda).removeClass('selected');
+            });
+            selec = [];
+            seleccionados = [];
+            sequence = [];
+
+            console.log('Experiment Data:', experimentData);  // Log data
+
+            // Reset table with new shapes
+            var shuffledFiguras = figuras.slice();
+            shuffledFiguras.sort(() => 0.5 - Math.random());
+            $('.tabla td').each(function(index) {
+                $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
+            });
+
+            if (currentGridId >= 3) {
+                const csvData = arrayOfObjectsToCsv(experimentData);
+                downloadCsv('experimentData.csv', csvData);
+            }
+
+            startNewAttempt();  // Reset sequence and timer for the next attempt
+            $('.tabla').hide();
+            $('#startGrid').show();
+            $('#continuar').hide();
+        });
+    } else {
+        // Show incorrect feedback (red) and then proceed
+        timeoutFeedback(false, function() {
+            seleccionados.forEach((item, index) => {
+                item.correct = "False";
+            });
+            experimentData.push({
+                gridId: currentGridId,
+                tryId: currentTryId,
+                sequence: [...sequence],
+                seleccionados: [...seleccionados],
+            });
+
+            // Clear selection and start a new attempt
+            selec = seleccionados.map(shape => shape.shapeProp);
+            selec.forEach(function(celda) {
+                $(celda).removeClass('selected');
+            });
+
+            console.log('Experiment Data:', experimentData);  // Log data
+            selec = [];
+            seleccionados = [];
+            sequence = [];
+            currentTryId++;
+        });
+    }
+    
+    // Update the selected shapes table (this can be outside the callback)
+    updateSelectedShapesTable();
+});
 
             startTime = Date.now(); // Reset response timer when the grid is shown
             gridShownTime = startTime; // Set grid shown time to calculate total time
