@@ -101,6 +101,10 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
+        var deminfo;
+        var finQuest;
+
+
         $("#Demo2").hide();
         $("#secondInst").show();
         $("#ConsentFrame").show();
@@ -108,10 +112,8 @@
         $("#termsContainer").show();
         $("#finalizar").hide()
         $("#comenzar").show();
-        
-        //DEMOGRAFICOS
-        //PARTE FINAL DEL EXPERIMENTO, ARREGLAR
-        //fix bugs like when you dont choose anythin
+        //ID
+        //2 tablas??
         
         var mia = []
         const figuras = [
@@ -162,22 +164,32 @@
           if (selectedShapes.length>0){ 
             const filterShapes = selectedShapes.map(s => {
             const shapeClass = $(s.shapeProp).find('div').attr('class');
-            console.log('Shape Class:', shapeClass);  // This should show the correct class like 'cuadrado_azul'
+            console.log('Shape Class:', shapeClass);  
             // Find the corresponding entry in the 'figuras' array using the class name directly
             return figuras.find(f => f.name === shapeClass);
             });
-            console.log(filterShapes[0]);
             const firstShape = filterShapes[0];
             const firstShapeRules = firstShape.rules;
             // Check if all shapes share the same 'shape', 'color', or 'border'
             const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
             const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
             const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
-            return sameShape || sameColor;}
-          else{
-            return false;
-          };
-        }
+            let sharedRules = [];
+            if (sameShape) sharedRules.push("shape");
+            if (sameColor) sharedRules.push("color");
+            if (sameBorder) sharedRules.push("border");
+            // If any rule is shared, return true and the shared rules string
+            if (sharedRules.length > 0) {
+              return { result: true, rules: sharedRules.join(',') };
+            } else {
+              // No shared rules
+              return { result: false, rules: sharedRules };
+            }
+          } else {
+          // If no shapes are selected, return false and an empty rule string
+          return { result: false, rules: '' };
+            };
+          }
 
           function updateSelectedShapesTable() {
             const selectedTable = $('#selectedShapesTable');
@@ -202,8 +214,15 @@
             return (ms / 1000).toFixed(3) + 's';
         }
 
-        function arrayOfObjectsToCsv(data) {
-          const headers = ['gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected', 'shapeSel', 'resTimeSel', 'totTime', 'correct'];
+        function arrayOfObjectsToCsv(data, deminfo, finQuest) {
+          const demographicsFields = ['Country', 'pregunta', 'Sex', 'Age'];
+          console.log(deminfo);
+          const demographicsData = deminfo.split(',');
+          const finFields = ['Country', 'pregunta', 'Sex', 'Age'];
+          console.log(finQuest);
+          const finData = finQuest.split(',');
+
+          const headers = [...demographicsFields,'gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected', 'ruleColor', 'ruleShape', 'ruleSelec', 'correct',...finFields];
           const csvRows = [headers.join(',')];
 
           data.forEach(tryData => {
@@ -231,21 +250,33 @@
 
               if (isLastOccurrence) {
               // Find the corresponding `seleccionado` for this shape
-                seleccionado = tryData.seleccionados.find(sel => sel.shapeSel === click.shape) || seleccionado;
-              }
+                seleccionado = tryData.seleccionados.find(sel => sel.shapeSel=== click.shape) || seleccionado;
+                //seleccionado.forEach((item,ind)=> { 
+                  //item.shapeProp=item.shapeSel;
+                  //namShape= figuras.find(f=>f.name===shapeSel);
+                  //item.shapeSel= namShape.rules;
+                //});
+                seleccionado.shapeProp = seleccionado.shapeSel;
+                namShape = figuras.find(f => f.name === seleccionado.shapeSel);
+                console.log(namShape.rules);
+                seleccionado.shapeSel = namShape.rules;
 
+                console.log(seleccionado);
+              }
               // Create a row by combining `sequence` data with `seleccionado` data, preserving temporal structure
               const row = [
+                ...demographicsData,
                 tryData.gridId || 'undefined',
                 tryData.tryId || 'undefined',
                 click.shape || 'undefined',
                 click.responseTime || 'undefined',
                 click.totalTime || 'undefined',
                 click.selected || 'undefined' ,
-                seleccionado.shapeSel || 'undefined',
-                seleccionado.resTimeSel || 'undefined',
+                seleccionado.shapeSel.color || 'undefined',
+                seleccionado.shapeSel.shape || 'undefined',
                 seleccionado.totTime || 'undefined',
-                seleccionado.correct || 'undefined'
+                seleccionado.correct || 'undefined',
+                ...finData
               ];
 
               csvRows.push(row.join(','));
@@ -265,6 +296,7 @@
           a.setAttribute('href', url);
           a.setAttribute('download', filename);
           a.click();
+          console.log("wtf");
           window.URL.revokeObjectURL(url);
         }
         var removeByAttr = function(arr, attr, value){
@@ -284,8 +316,7 @@
         $('#comenzar').on('click', function() {
             $(this).hide();
             deminfo = $("#Country").val() + ","+ $("#preguntaaa").val()+ ","+ $("#Sex:checked").val() + "," +
-  			    $("#Age:checked").val() + "," + $("#Hand:checked").val() + "," +
-  			    $("#Vision:checked").val() + "," + $("#English:checked").val();
+  			    $("#Age:checked").val();
             console.log(deminfo);
             $("#Demographics").hide();
             $('#startGrid').show(); // Show the Start Grid button
@@ -322,11 +353,7 @@
                 
                 if ($(this).hasClass('selected')) {
                     $(this).removeClass('selected');
-                    //seleccionados = seleccionados.filter(c => c !== this);
-                    // Remove the click data from sequence
                     removeByAttr(seleccionados, 'shapeSel', shape); 
-                    //seleccionados = seleccionados.filter(click => click.shape !== shape);
-                    console.log("this selec after ", seleccionados);
                     sequence.push({
                             shape: shape,
                             responseTime: formatTime(responseTime),   // Formatted response time
@@ -335,11 +362,14 @@
                         });
                 } else { 
                   $(this).addClass('selected');
+                  namShape= figuras.find(f=>f.name===shape);
+                  console.log(namShape.rules);
                   seleccionados.push({
                   shapeProp: this,
                   shapeSel:shape,
-                  resTimeSel: formatTime(responseTime),   // Formatted response time
-                  totTime: formatTime(totalTime),         // Formatted total time
+                  //resTimeSel: formatTime(responseTime),
+                  resTimeSel:96 ,   
+                  totTime: formatTime(totalTime),        
                   correct: true                      });
                   // Add the click data to the sequence with formatted time
                   sequence.push({
@@ -359,12 +389,15 @@
         $('#continuar').on('click', function() {
           $('#continuar').prop('disabled', true);
           $('.grid').css('pointer-events', 'none');
-            if (checkSharedRules(seleccionados, figuras) && seleccionados.length>2) {
+            result=checkSharedRules(seleccionados, figuras);
+            console.log(result.result, result.rules)
+            if ( result.result && seleccionados.length>2) {
               timeoutFeedback(true, function(){ 
                 // Save current attempt's data
                 seleccionados.forEach((item, index) => {
                   // Update the 'correct' key to whatever value you want (e.g., true or false)
                   item.correct = "True"; 
+                  item.totTime=result.rules;
                 });
                 console.log(seleccionados);
                 experimentData.push({
@@ -439,7 +472,13 @@
         });
 
         $('#finalizar').on('click', function() {
-          console.log("sdfsdf")
+          console.log("ggggggg")
+          console.log("deminfo");
+          console.log(deminfo);
+          console.log("deminfo");
+          var finQuest = $("#Country2").val() + ","+ $("#preguntaaa2").val()+ ","+ $("#Sex2:checked").val()
+          const csvData = arrayOfObjectsToCsv(experimentData, deminfo,finQuest);
+          downloadCsv('experimentData.csv', csvData);
           $("#Demo2").hide();
           $("#finalizar").hide();
           $("<p>Thank you for participating in the experiment!</p>").css({
@@ -448,14 +487,8 @@
             "text-align": "center",   // Align to the center of the page
             "margin-top": "20px"   }).insertAfter('#finalizar');   // Inserts the text after the button
           });
-          //$('#Demo2').html('<p style="color: green; text-align: center;">Thank you for participating in the experiment!</p>');
+          
 
-          const csvData = arrayOfObjectsToCsv(experimentData);
-          downloadCsv('experimentData.csv', csvData);
-
-      
-
-        // Button to download experiment data as CSV (optional)
         
     });
   </script>

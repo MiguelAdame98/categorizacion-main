@@ -373,6 +373,104 @@ $('#continuar').on('click', function() {
         // Button to download experiment data as CSV (optional)
         
     });
+    function arrayOfObjectsToCsv(data, deminfo) {
+  // Split the demographics info into an array to get each field separately
+  const demographicsFields = ['Country', 'preguntaaa', 'Sex', 'Age', 'Hand', 'Vision', 'English'];
+  const demographicsData = deminfo.split(',');
+
+  // Append demographics headers to the CSV headers
+  const headers = [...demographicsFields, 'gridId', 'tryId', 'shape', 'responseTime', 'totalTime', 'selected', 'shapeSel', 'resTimeSel', 'totTime', 'correct'];
+  
+  const csvRows = [headers.join(',')];
+
+  data.forEach(tryData => {
+    // Create a mapping of shapes to their last index in the sequence
+    const lastOccurrenceMap = {};
+
+    // Iterate over sequence to track the last occurrence index for each shape
+    tryData.sequence.forEach((click, index) => {
+      const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
+      lastOccurrenceMap[key] = index;
+    });
+
+    // Loop through the sequence (preserving temporal order)
+    tryData.sequence.forEach((click, index) => {
+      let seleccionado = {
+        shapeSel: 'undefined',
+        resTimeSel: 'undefined',
+        totTime: 'undefined',
+        correct: 'undefined'
+      };
+
+      // Only apply `seleccionados` data to the last occurrence of a shape
+      const key = `${tryData.gridId}_${tryData.tryId}_${click.shape}`;
+      const isLastOccurrence = lastOccurrenceMap[key] === index;
+
+      if (isLastOccurrence) {
+        // Find the corresponding `seleccionado` for this shape
+        seleccionado = tryData.seleccionados.find(sel => sel.shapeSel === click.shape) || seleccionado;
+      }
+
+      // Combine demographics with task data for each row
+      const row = [
+        ...demographicsData,                         // Include demographics data here
+        tryData.gridId || 'undefined',
+        tryData.tryId || 'undefined',
+        click.shape || 'undefined',
+        click.responseTime || 'undefined',
+        click.totalTime || 'undefined',
+        click.selected || 'undefined',
+        seleccionado.shapeSel || 'undefined',
+        seleccionado.resTimeSel || 'undefined',
+        seleccionado.totTime || 'undefined',
+        seleccionado.correct || 'undefined'
+      ];
+
+      csvRows.push(row.join(','));
+    });
+  });
+
+  return csvRows.join('\n');
+}
+function checkSharedRules(selectedShapes, figuras) {
+    if (selectedShapes.length > 0) {
+        // Map over selected shapes to get their corresponding entry from the 'figuras' array
+        const filterShapes = selectedShapes.map(s => {
+            const shapeClass = $(s.shapeProp).find('div').attr('class');
+            console.log('Shape Class:', shapeClass); // For debugging purposes
+            return figuras.find(f => f.name === shapeClass);
+        });
+
+        console.log(filterShapes[0]);
+
+        const firstShape = filterShapes[0];
+        const firstShapeRules = firstShape.rules;
+
+        // Check if all shapes share the same 'shape', 'color', or 'border'
+        const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
+        const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
+        const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
+
+        // Create a string to describe which rules are shared
+        let sharedRules = [];
+        if (sameShape) sharedRules.push("shape");
+        if (sameColor) sharedRules.push("color");
+        if (sameBorder) sharedRules.push("border");
+
+        // If any rule is shared, return true and the shared rules string
+        if (sharedRules.length > 0) {
+            return { result: true, rules: sharedRules.join(',') };
+        } else {
+            // No shared rules
+            return { result: false, rules: sharedRules };
+        }
+    } else {
+        // If no shapes are selected, return false and an empty rule string
+        return { result: false, rules: '' };
+    }
+}
+
+
   </script>
 </body>
 </html>
