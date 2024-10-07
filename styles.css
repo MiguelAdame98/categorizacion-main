@@ -3,8 +3,25 @@ body {
     background: #ffffff;
     min-height: 100vh;
     display: flex;
-    justify-content: space-evenly;
+    flex-direction: column;
     align-items: center;
+    justify-content: space-evenly;
+  }
+  #ConsentSection, #Demographics, .inicio {
+    margin-bottom: 20px;
+  }
+  #ConsentFrame {
+    width: 80%;
+    margin-bottom: 20px;
+  }
+  #termsLabel {
+    color: red; /* Initial color */
+    cursor: pointer; /* Changes cursor to a pointer when hovering */
+}
+
+  #termsLabel:hover {
+    color: green; /* Color changes when hovered */
+    animation: bounceIn 1.5s ease;
   }
   /*body {
     background: #ffffff;
@@ -18,6 +35,7 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    text-align: center;
   }
   .inicio button {
     font-size: 20px;

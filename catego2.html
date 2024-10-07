@@ -6,14 +6,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <p id="secondInst">Please read the consent form below that explains your rights as a human participant in research</p>
-  <tr><td height="100%">
-  <iframe id="ConsentFrame" width="100%" height="50%" src="TURKconsent.htm"></iframe>
-  </td></tr>
-  <div class="inicio">
-    <button id="comenzar">Comenzar</button>
-  </div>
-  <div id="Demographics" style="text-align:center">
+  <div id="Demographics" style="text-align:center; margin-bottom: 20px;">
     <p>As a part of the research we are collecting general demographic information. </p>
     <p>You are not required to complete these questions. </p>
     <p>However, doing so will help us better understand our results.</p>
@@ -36,20 +29,25 @@
     <input id="Age" type="radio" name="AgeGroup" value="60"> 56 - 60
     <input id="Age" type="radio" name="AgeGroup" value="65"> 61 - 65
     <input id="Age" type="radio" name="AgeGroup" value="70"> 66 and above<br>
-    <p>4. Handedness</p>
-    <input id="Hand" type="radio" name="HandGroup" value="Right"> Right
-    <input id="Hand" type="radio" name="HandGroup" value="Left"> Left
-    <input id="Hand" type="radio" name="HandGroup" value="Both"> Both
-    <p>5. Vision</p>
-    <input id="Vision" type="radio" name="VisionGroup" value="Normal"> Normal eyesight without needing glasses<br>
-    <input id="Vision" type="radio" name="VisionGroup" value="Corrected"> Corrected Vision (wear glasses)<br>
-    <input id="Vision" type="radio" name="VisionGroup" value="problems"> Poor eyesight and do not wear glasses<br>
-    <p>6. English Ability</p>
-    <input id="English" type="radio" name="EnglishGroup" value="First"> First-language speaker<br>
-    <input id="English" type="radio" name="EnglishGroup" value="Second"> Second-language speaker<br>
-    <input id="English" type="radio" name="EnglishGroup" value="None"> No English ability<br>
-    </div>
-
+    
+  </div>
+  
+  <div id="Demo2" style="text-align:center; margin-bottom: 20px;">
+    <p>As a part of the research we are collecting general demographic information. </p>
+    <p>You are not required to complete these questions. </p>
+    <p>However, doing so will help us better understand our results.</p>
+    <p>1. Country
+    <input id="Country2" type="text"> </p>
+    <p>Preguntonaaa
+    <input id="preguntaaa2" type="text"></p>
+    <p>2.
+    <input id="Sex2" type="radio" name="SexGroup" value="Male"> Male
+    <input id="Sex2" type="radio" name="SexGroup" value="Female"> Female</p>
+  </div>
+  <div class="inicio">
+    <button id="comenzar" >Comenzar</button>
+  </div>
+  
   <div class="tabla-container" style="display: none;">
     <table class="tabla">
       <tr>
@@ -78,13 +76,17 @@
       </tr>
     </table>
     <table id="selectedShapesTable" style="border-collapse: collapse; margin-bottom: 20px;">
-      <!-- Empty table to be populated dynamically -->
     </table>
-  
+
     <div class="inicio">
       <button id="continuar" style="display: none;">Continuar</button>
-      <button id="startGrid" style="display: none;">Start Grid</button> <!-- New Start button -->
-    </div>
+      <button id="startGrid" style="display: none;">Start Grid</button>
+   </div>
+   <div class="inicio">
+      <button id="finalizar">Finalizar</button>
+   </div>
+   
+    
   </div>
 
 
@@ -99,12 +101,17 @@
         var currentTryId = 1;     // Try ID, increments with each new attempt
         var startTime;            // Tracks start time for response time calculation
         var gridShownTime;        // Tracks when the grid is shown for total time calculation
-        $("#secondInst").hide();
-        $("#ConsentFrame").hide();
-        $("#Demographics").show();
-        //AGREGAR FUNCIONALIDAD DE LAS REGLAS
+        $("#Demo2").hide();
+        $("#secondInst").show();
+        $("#ConsentFrame").show();
+        $("#selectedShapesTable").hide();
+        $("#termsContainer").show();
+        $("#finalizar").hide()
+        $("#comenzar").show();
+        
         //DEMOGRAFICOS
         //PARTE FINAL DEL EXPERIMENTO, ARREGLAR
+        //fix bugs like when you dont choose anythin
         
         var mia = []
         const figuras = [
@@ -152,22 +159,25 @@
           }, 3000);  // Feedback duration (3 seconds)
       }
         function checkSharedRules(selectedShapes,figuras) {
-          const filterShapes = selectedShapes.map(s => {
-          const shapeClass = $(s.shapeProp).find('div').attr('class');
-          console.log('Shape Class:', shapeClass);  // This should show the correct class like 'cuadrado_azul'
-
-          // Find the corresponding entry in the 'figuras' array using the class name directly
-          return figuras.find(f => f.name === shapeClass);
-          });
-          console.log(filterShapes[0]);
-          const firstShape = filterShapes[0];
-          const firstShapeRules = firstShape.rules;
-
-          // Check if all shapes share the same 'shape', 'color', or 'border'
-          const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
-          const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
-          const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
-          return sameShape || sameColor;}
+          if (selectedShapes.length>0){ 
+            const filterShapes = selectedShapes.map(s => {
+            const shapeClass = $(s.shapeProp).find('div').attr('class');
+            console.log('Shape Class:', shapeClass);  // This should show the correct class like 'cuadrado_azul'
+            // Find the corresponding entry in the 'figuras' array using the class name directly
+            return figuras.find(f => f.name === shapeClass);
+            });
+            console.log(filterShapes[0]);
+            const firstShape = filterShapes[0];
+            const firstShapeRules = firstShape.rules;
+            // Check if all shapes share the same 'shape', 'color', or 'border'
+            const sameShape = filterShapes.every(shape => shape.rules.shape === firstShapeRules.shape);
+            const sameColor = filterShapes.every(shape => shape.rules.color === firstShapeRules.color);
+            const sameBorder = filterShapes.every(shape => shape.rules.border === firstShapeRules.border);
+            return sameShape || sameColor;}
+          else{
+            return false;
+          };
+        }
 
           function updateSelectedShapesTable() {
             const selectedTable = $('#selectedShapesTable');
@@ -280,7 +290,7 @@
             $("#Demographics").hide();
             $('#startGrid').show(); // Show the Start Grid button
             $('.tabla-container').show(); // Show the container with grid
-            $("#Demographics").hide();
+            $("#selectedShapesTable").show();
         });
 
         // "Start Grid" button click event
@@ -349,7 +359,7 @@
         $('#continuar').on('click', function() {
           $('#continuar').prop('disabled', true);
           $('.grid').css('pointer-events', 'none');
-            if (checkSharedRules(seleccionados, figuras)) {
+            if (checkSharedRules(seleccionados, figuras) && seleccionados.length>2) {
               timeoutFeedback(true, function(){ 
                 // Save current attempt's data
                 seleccionados.forEach((item, index) => {
@@ -379,18 +389,26 @@
                 $('.tabla td').each(function(index) {
                     $(this).html('<div class="' + shuffledFiguras[index] + '"></div>');
                 });
-                if (currentGridId>=3){
+                if (currentGridId==1){
+                  console.log(currentGridId);
+                  //$("body *").hide();  
+                  $('#continuar').hide(); // Show the Continue button
+                  $('.tabla').hide(); // Make sure the table is visible  
+                  $("#selectedShapesTable").hide();  
+                  $("#Demo2").show();
+                  //$("#finalizar").css("display", "block");
+                  $("#finalizar").show();
+        
 
-                  const csvData = arrayOfObjectsToCsv(experimentData);
-                  downloadCsv('experimentData.csv', csvData);
-                }
-
-                
-                startNewAttempt();  // Reset sequence and timer for the next attempt
-                $('.tabla').hide();
-                $('#startGrid').show();
-                $('#continuar').hide();
-                updateSelectedShapesTable();
+                  
+                }   
+                else{
+                  startNewAttempt();  // Reset sequence and timer for the next attempt
+                  $('.tabla').hide();
+                  $('#startGrid').show();
+                  $('#continuar').hide();
+                  updateSelectedShapesTable();
+                }   
               });
             } else {
               timeoutFeedback(function(){
@@ -419,6 +437,23 @@
               });
             }
         });
+
+        $('#finalizar').on('click', function() {
+          console.log("sdfsdf")
+          $("#Demo2").hide();
+          $("#finalizar").hide();
+          $("<p>Thank you for participating in the experiment!</p>").css({
+            "color": "green",         // Make it visible, adjust as needed
+            "font-size": "18px",      // Set font size to distinguish it
+            "text-align": "center",   // Align to the center of the page
+            "margin-top": "20px"   }).insertAfter('#finalizar');   // Inserts the text after the button
+          });
+          //$('#Demo2').html('<p style="color: green; text-align: center;">Thank you for participating in the experiment!</p>');
+
+          const csvData = arrayOfObjectsToCsv(experimentData);
+          downloadCsv('experimentData.csv', csvData);
+
+      
 
         // Button to download experiment data as CSV (optional)
         
